@@ -110,7 +110,8 @@ const tableData: User[] = [
       <el-button :type="selectedTimeRange === '0' ? 'primary' : 'default'" @click="selectTimeRange('0')">全部</el-button>
       <el-button :type="selectedTimeRange === '1' ? 'primary' : 'default'" @click="selectTimeRange('1')">近1天</el-button>
       <el-button :type="selectedTimeRange === '7' ? 'primary' : 'default'" @click="selectTimeRange('7')">近7天</el-button>
-      <el-button :type="selectedTimeRange === '30' ? 'primary' : 'default'" @click="selectTimeRange('30')">近30天</el-button>
+      <el-button :type="selectedTimeRange === '30' ? 'primary' : 'default'"
+        @click="selectTimeRange('30')">近30天</el-button>
     </div>
     <!-- <el-card style="max-width: 100%"> -->
     <!-- <template #header>
@@ -127,7 +128,7 @@ const tableData: User[] = [
                 <el-avatar :src="item.face" fit="cover" class="avatar"></el-avatar>
                 <div class="name">{{ item.uname }}</div>
               </div>
-              <el-table :data="[item]" class="list-item-table" style="width: auto;">
+              <el-table :data="[item]" class="list-item-table" style="width: auto;" v-loading="loading">
                 <!-- <el-table-column prop="income" label="收入" /> -->
                 <el-table-column label="收入">
                   <template #default="scope">
@@ -168,9 +169,23 @@ export default defineComponent({
   name: 'FullScreenListWithTables',
   setup() {
     const listItems = ref([]);
+    const loading = ref(false);
 
-    const selectTimeRange = (range: string) => {
-      selectedTimeRange.value = range
+    const selectTimeRange = async (range: string) => {
+      selectedTimeRange.value = range;
+      loading.value = true;
+      try {
+        let url = `/api/rank/period/${range}`;
+        if (range == '0') {
+          url = `/api/rank`;
+        }
+        const response = await axios.get(url);
+        listItems.value = response.data;
+      } catch (error) {
+        console.error('API request failed', error);
+      } finally {
+        loading.value = false;
+      }
     };
 
     const selectedTimeRange = ref('0');
@@ -209,6 +224,7 @@ export default defineComponent({
     return {
       listItems,
       selectedTimeRange,
+      loading,
       selectTimeRange,
       tooltipContent,
     };
@@ -282,15 +298,21 @@ export default defineComponent({
 }
 
 .avatar {
-  margin-right: 10px; /* 调整头像与名字之间的间距 */
-  flex-shrink: 0; /* 禁止头像缩小 */
+  margin-right: 10px;
+  /* 调整头像与名字之间的间距 */
+  flex-shrink: 0;
+  /* 禁止头像缩小 */
 }
 
 .name {
-  font-size: 16px; /* 调整名字的字体大小 */
-  font-weight: bold; /* 设置名字的粗体 */
+  font-size: 16px;
+  /* 调整名字的字体大小 */
+  font-weight: bold;
+  /* 设置名字的粗体 */
 }
+
 .income-tooltip {
-  cursor: pointer; /* 添加鼠标指针样式，表明有交互 */
+  cursor: pointer;
+  /* 添加鼠标指针样式，表明有交互 */
 }
 </style>
