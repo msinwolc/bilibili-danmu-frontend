@@ -107,94 +107,110 @@ const tableData: User[] = [
   <h1 class="title">Rank</h1>
   <div class="full-screen-list">
     <div class="button-group">
-      <el-button :type="selectedTimeRange === '1' ? 'primary' : ''" @click="selectTimeRange('1')">近1天</el-button>
-      <el-button :type="selectedTimeRange === '7' ? 'primary' : ''" @click="selectTimeRange('7')">近7天</el-button>
-      <el-button :type="selectedTimeRange === '30' ? 'primary' : ''" @click="selectTimeRange('30')">近30天</el-button>
+      <el-button :type="selectedTimeRange === '0' ? 'primary' : 'default'" @click="selectTimeRange('0')">全部</el-button>
+      <el-button :type="selectedTimeRange === '1' ? 'primary' : 'default'" @click="selectTimeRange('1')">近1天</el-button>
+      <el-button :type="selectedTimeRange === '7' ? 'primary' : 'default'" @click="selectTimeRange('7')">近7天</el-button>
+      <el-button :type="selectedTimeRange === '30' ? 'primary' : 'default'" @click="selectTimeRange('30')">近30天</el-button>
     </div>
-    <el-card style="max-width: 100%">
-      <!-- <template #header>
+    <!-- <el-card style="max-width: 100%"> -->
+    <!-- <template #header>
               <div class="card-header">
                   <span>Full Screen List with Tables</span>
               </div>
           </template> -->
-      <div class="list-content">
-        <el-row v-for="item in listItems" :key="item.name" class="list-item">
-          <el-col :span="24">
-            <el-card class="list-item-card">
-              <div class="card-content">
-                <div>{{ item.name }}</div>
-                <el-table :data="[item]" class="list-item-table" style="width: auto;">
-                  <el-table-column prop="profit" label="收入" />
-                  <el-table-column prop="danmu" label="弹幕" />
-                  <el-table-column prop="watched" label="观看" />
-                  <el-table-column prop="tatus" label="开播状态" width="100">
-                    <template #default="scope">
-                      <el-tag :type="scope.row.status === '未开播' ? '' : 'success'" disable-transitions>{{ scope.row.status
-                      }}</el-tag>
-                    </template>
-                  </el-table-column>
-                </el-table>
+    <div class="list-content">
+      <el-row v-for="item in listItems" :key="item.uname" class="list-item">
+        <el-col :span="24">
+          <el-card class="list-item-card">
+            <div class="card-content">
+              <div class="avatar-name">
+                <el-avatar :src="item.face" fit="cover" class="avatar"></el-avatar>
+                <div class="name">{{ item.uname }}</div>
               </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div>
-    </el-card>
+              <el-table :data="[item]" class="list-item-table" style="width: auto;">
+                <!-- <el-table-column prop="income" label="收入" /> -->
+                <el-table-column label="收入">
+                  <template #default="scope">
+                    <el-tooltip class="income-tooltip" effect="dark" :content="tooltipContent(scope.row)">
+                      <template #content>
+                        <div v-html="tooltipContent(scope.row)"></div>
+                      </template>
+                      {{ scope.row.income }}
+                    </el-tooltip>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="danmuCount" label="弹幕" />
+                <el-table-column prop="watched" label="观看" />
+                <el-table-column prop="liveStatus" label="开播状态" width="100">
+                  <template #default="scope">
+                    <el-tag
+                      :type="scope.row.liveStatus === 1 ? 'success' : (scope.row.liveStatus === 2 ? 'warning' : 'info')"
+                      disable-transitions>{{
+                        scope.row.liveStatus === 1 ? '直播中' : (scope.row.liveStatus === 2 ? '轮播中' : '未开播')
+                      }}</el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
+    <!-- </el-card> -->
   </div>
 </template>
 
 <script lang="ts">
+import axios from 'axios';
 import { defineComponent, ref, watch } from 'vue';
 
 export default defineComponent({
   name: 'FullScreenListWithTables',
   setup() {
-    const listItems = ref([
-      {
-        name: '德云色',
-        danmu: 2455,
-        profit: 4500.0,
-        watched: 180689,
-        status: '直播中'
-      },
-      {
-        name: '明前奶绿',
-        danmu: 1543,
-        profit: 2697.0,
-        watched: 3409,
-        status: '未开播'
-      },
-      {
-        name: 'BLG_whzy',
-        danmu: 2455,
-        profit: 4500.0,
-        watched: 180689,
-        status: '未开播'
-      },
-      {
-        name: 'Lol官方赛事解说',
-        danmu: 6899,
-        profit: 120.0,
-        watched: 340689,
-        status: '直播中'
-      },
-    ]);
+    const listItems = ref([]);
 
     const selectTimeRange = (range: string) => {
       selectedTimeRange.value = range
     };
 
-    const selectedTimeRange = ref('1');
+    const selectedTimeRange = ref('0');
 
     watch(selectedTimeRange, (newRange) => {
       console.log(`Selected time range: ${newRange}`);
       // 在这里根据 newRange 进行数据过滤或重新加载数据
     });
 
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/api/rank');
+        listItems.value = response.data;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    interface TableRow {
+      giftIncome: number | null | undefined;
+      scIncome: number | null | undefined;
+    }
+    const tooltipContent = (row: TableRow) => {
+      let content = '';
+      if (row.giftIncome !== undefined && row.giftIncome !== null) {
+        content += `礼物收入: ${row.giftIncome}<br>`;
+      }
+      if (row.scIncome !== undefined && row.scIncome !== null) {
+        content += `SC收入: ${row.scIncome}`;
+      }
+      return content;
+    }
+
+    fetchData()
+
     return {
       listItems,
       selectedTimeRange,
       selectTimeRange,
+      tooltipContent,
     };
   },
 
@@ -221,7 +237,8 @@ export default defineComponent({
 }
 
 .list-content {
-  padding: 10px;
+  max-width: 100%;
+  padding-bottom: 10px;
 }
 
 .list-item {
@@ -257,5 +274,23 @@ export default defineComponent({
   margin-bottom: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.avatar-name {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  margin-right: 10px; /* 调整头像与名字之间的间距 */
+  flex-shrink: 0; /* 禁止头像缩小 */
+}
+
+.name {
+  font-size: 16px; /* 调整名字的字体大小 */
+  font-weight: bold; /* 设置名字的粗体 */
+}
+.income-tooltip {
+  cursor: pointer; /* 添加鼠标指针样式，表明有交互 */
 }
 </style>
