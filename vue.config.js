@@ -19,5 +19,6 @@ module.exports = defineConfig({
         // logLevel: 'debug', // 可选：打印详细的代理日志，方便调试
       },
     }
-  }
+  },
+  outputDir: 'danmu_dist'
 })

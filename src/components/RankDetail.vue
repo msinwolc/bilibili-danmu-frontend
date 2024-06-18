@@ -125,7 +125,7 @@ const tableData: User[] = [
           <el-card class="list-item-card">
             <div class="card-content">
               <div class="avatar-name">
-                <el-avatar :src="item.face" fit="cover" class="avatar"></el-avatar>
+                <el-avatar :src="proxyImage(item.face)" fit="cover" class="avatar"></el-avatar>
                 <div class="name">{{ item.uname }}</div>
               </div>
               <el-table :data="[item]" class="list-item-table" style="width: auto;" v-loading="loading">
@@ -141,7 +141,7 @@ const tableData: User[] = [
                   </template>
                 </el-table-column>
                 <el-table-column prop="danmuCount" label="弹幕" />
-                <el-table-column prop="watched" label="观看" />
+                <el-table-column prop="onlineCount" label="观看" />
                 <el-table-column prop="liveStatus" label="开播状态" width="100">
                   <template #default="scope">
                     <el-tag
@@ -204,6 +204,10 @@ export default defineComponent({
       }
     }
 
+    const proxyImage = (url: string) => {
+      return url.replace('https://i0.hdslb.com', '/proxy');
+    }
+
     interface TableRow {
       giftIncome: number | null | undefined;
       scIncome: number | null | undefined;
@@ -227,6 +231,7 @@ export default defineComponent({
       loading,
       selectTimeRange,
       tooltipContent,
+      proxyImage,
     };
   },
 
@@ -278,7 +283,7 @@ export default defineComponent({
 
 /* 去除下边框线 */
 .el-table {
-  --el-table-border-color: transport
+  --el-table-border-color: transparent;
 }
 
 /* Deep selector to override el-card__body padding */
@@ -315,4 +320,23 @@ export default defineComponent({
   cursor: pointer;
   /* 添加鼠标指针样式，表明有交互 */
 }
+
+/* 手机端样式 */
+@media (max-width: 768px) {
+  .card-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avatar-name {
+    display: flex;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .list-item-table {
+    width: 100%;
+  }
+}
+
 </style>
